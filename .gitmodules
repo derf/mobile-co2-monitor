@@ -1,0 +1,6 @@
+[submodule "ext/scd4x"]
+	path = ext/scd4x
+	url = https://github.com/derf/esp8266-nodemcu-scd4x.git
+[submodule "ext/ssd1306"]
+	path = ext/ssd1306
+	url = https://github.com/derf/esp8266-nodemcu-ssd1306.git
