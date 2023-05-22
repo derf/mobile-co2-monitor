@@ -76,8 +76,9 @@ function measure()
 		ssd1306.show(fb.buf)
 		return
 	end
-	line1 = string.format("%8d ppm\n\n", co2)
+	line1 = string.format("%8d ppm\n", co2)
 	line2 = string.format("%8d.%d c\n%8d.%d %%", raw_temp/65536 - 45, (raw_temp%65536)/6554, raw_humi/65536, (raw_humi%65536)/6554)
+	fb.y = 16
 	fb.print(fn, line1)
 	fb.print(fn, line2)
 	fb.draw_battery_8(114, 0, bat_p)
