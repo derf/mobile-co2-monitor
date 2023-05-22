@@ -19,11 +19,8 @@ ssd1306.init(128, 64)
 ssd1306.contrast(255)
 fb.init(128, 64)
 
-timestamp = 0
-old_timestamp = 0
 no_wifi_count = 0
 publish_count = 0
-message_queue = {}
 
 -- cal 2023-01-06
 -- 4.2V -> "4.36V" (raw ~ 948)
@@ -42,17 +39,6 @@ function get_battery_percent(bat_mv)
 		return 0
 	end
 	return (bat_mv - 3360) / 8
-end
-
-function get_time()
-	publishing_http = true
-	http.get("http://arclight:1234/", nil, function(status, body, headers)
-		publishing_http = false
-		if timestamp < 604800 then
-			old_timestamp = timestamp
-		end
-		timestamp = tonumber(body)
-	end)
 end
 
 function connect_wifi()
@@ -78,7 +64,6 @@ function scd4x_start()
 end
 
 function measure()
-	timestamp = timestamp + 5
 	fb.init(128, 64)
 	local co2, raw_temp, raw_humi = scd4x.read()
 	local bat_mv = get_battery_mv()
@@ -97,14 +82,12 @@ function measure()
 	fb.print(fn, line2)
 	fb.draw_battery_8(114, 0, bat_p)
 	if have_wifi then
-		fb.x = 90
-		fb.print(fn, string.format("%02d:%02d", (timestamp / 3600) % 24, (timestamp / 60) % 60))
-	elseif no_wifi_count < 120 then
+		fb.x = 116
+		fb.print(fn, "W")
+	end
+	if no_wifi_count < 120 then
 		no_wifi_count = no_wifi_count + 1
 	else
-		table.insert(message_queue, {timestamp, co2, raw_temp, raw_humi})
-		fb.x = 100
-		fb.print(fn, string.format("%d", table.getn(message_queue)))
 		no_wifi_count = 0
 		connect_wifi()
 	end
@@ -115,14 +98,6 @@ function measure()
 		publish_count = 0
 		gpio.write(ledpin, 0)
 		publish_influx(co2, raw_temp, raw_humi, bat_mv)
-	elseif have_wifi and influx_url and not publishing_http and timestamp > 604800 then
-		for i, v in ipairs(message_queue) do
-			if v[1] < 604800 then
-				v[1] = timestamp - (old_timestamp - v[1])
-			end
-		end
-		--print(timestamp)
-		empty_queue(message_queue)
 	else
 		collectgarbage()
 	end
@@ -134,32 +109,9 @@ function publish_influx(co2, raw_temp, raw_humi, bat_mv)
 		http.post(influx_url, influx_header, string.format("esp8266%s battery_mv=%d", influx_attr, bat_mv), function(code, data)
 			publishing_http = false
 			gpio.write(ledpin, 1)
-			get_time()
 			collectgarbage()
 		end)
 	end)
-end
-
-function empty_queue(q)
-	local n = table.getn(q)
-	if n > 0 then
-		publishing_http = true
-		gpio.write(ledpin, 0)
-		local ts = q[n][1]
-		local co2 = q[n][2]
-		local t = q[n][3]
-		local h = q[n][4]
-		table.remove(q)
-		--print(influx_url .. '&precision=s')
-		--print(string.format("scd4x%s co2_ppm=%d,temperature_celsius=%d.%d,humidity_relpercent=%d.%d %d", influx_attr, co2, t/65536 - 45, (t%65536)/6554, h/65536, (h%65536)/6554, ts))
-		http.post(influx_url .. '&precision=s', influx_header, string.format("scd4x%s co2_ppm=%d,temperature_celsius=%d.%d,humidity_relpercent=%d.%d %d", influx_attr, co2, t/65536 - 45, (t%65536)/6554, h/65536, (h%65536)/6554, ts), function(code, data)
-			--print('Q ' .. n .. ' returned ' .. code .. ' ' .. data)
-			empty_queue(q)
-		end)
-	else
-		publishing_http = false
-		gpio.write(ledpin, 1)
-	end
 end
 
 local init_t = tmr.create()
