@@ -1,4 +1,4 @@
-station_cfg = {}
+station_cfgs = {}
 
 chip_id = string.format("%06X", node.chipid())
 device_id = "esp8266_" .. chip_id
@@ -19,6 +19,7 @@ ssd1306.init(128, 64)
 ssd1306.contrast(255)
 fb.init(128, 64)
 
+wifi_index = 1
 no_wifi_count = 0
 publish_count = 0
 
@@ -43,12 +44,12 @@ end
 
 function connect_wifi()
 	print("WiFi MAC: " .. wifi.sta.getmac())
-	print("Connecting to ESSID " .. station_cfg.ssid)
+	print("Connecting to ESSID " .. station_cfgs[wifi_index].ssid)
 	wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, wifi_connected)
 	wifi.eventmon.register(wifi.eventmon.STA_DHCP_TIMEOUT, wifi_err)
 	wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, wifi_err)
-	wifi.setmode(wifi.STATION)
-	wifi.sta.config(station_cfg)
+	wifi.setmode(wifi.STATION, false)
+	wifi.sta.config(station_cfgs[wifi_index])
 	wifi.sta.connect()
 end
 
@@ -85,19 +86,23 @@ function measure()
 	if have_wifi then
 		fb.x = 100
 		fb.print(fn, string.format("%d", wifi.sta.getrssi()))
-	end
-	if no_wifi_count < 120 then
-		no_wifi_count = no_wifi_count + 1
 	else
-		no_wifi_count = 0
-		connect_wifi()
+		if no_wifi_count == 5 then
+			wifi_index = (wifi_index % table.getn(station_cfgs)) + 1
+			wifi.setmode(wifi.NULLMODE, false)
+		end
+		if no_wifi_count < 24 then
+			no_wifi_count = no_wifi_count + 1
+		else
+			no_wifi_count = 0
+			connect_wifi()
+		end
 	end
 	ssd1306.show(fb.buf)
 	fb.init(128, 64)
 	publish_count = publish_count + 1
 	if have_wifi and influx_url and publish_count >= 4 and not publishing_http then
 		publish_count = 0
-		gpio.write(ledpin, 0)
 		publish_influx(co2, raw_temp, raw_humi, bat_mv)
 	else
 		collectgarbage()
@@ -109,7 +114,6 @@ function publish_influx(co2, raw_temp, raw_humi, bat_mv)
 	http.post(influx_url, influx_header, string.format("scd4x%s co2_ppm=%d,temperature_celsius=%d.%d,humidity_relpercent=%d.%d", influx_attr, co2, raw_temp/65536 - 45, (raw_temp%65536)/6554, raw_humi/65536, (raw_humi%65536)/6554), function(code, data)
 		http.post(influx_url, influx_header, string.format("esp8266%s battery_mv=%d", influx_attr, bat_mv), function(code, data)
 			publishing_http = false
-			gpio.write(ledpin, 1)
 			collectgarbage()
 		end)
 	end)
@@ -121,6 +125,7 @@ init_t:start()
 
 function wifi_connected()
 	have_wifi = true
+	no_wifi_count = 0
 end
 
 function wifi_err()
