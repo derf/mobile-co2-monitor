@@ -83,8 +83,8 @@ function measure()
 	fb.print(fn, line2)
 	fb.draw_battery_8(114, 0, bat_p)
 	if have_wifi then
-		fb.x = 116
-		fb.print(fn, "W")
+		fb.x = 100
+		fb.print(fn, string.format("%d", wifi.sta.getrssi()))
 	end
 	if no_wifi_count < 120 then
 		no_wifi_count = no_wifi_count + 1
