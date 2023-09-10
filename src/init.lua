@@ -43,7 +43,6 @@ function get_battery_percent(bat_mv)
 end
 
 function connect_wifi()
-	print("WiFi MAC: " .. wifi.sta.getmac())
 	print("Connecting to ESSID " .. station_cfgs[wifi_index].ssid)
 	wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, wifi_connected)
 	wifi.eventmon.register(wifi.eventmon.STA_DHCP_TIMEOUT, wifi_err)
@@ -124,6 +123,7 @@ init_t:register(1 * 1000, tmr.ALARM_SINGLE, scd4x_start)
 init_t:start()
 
 function wifi_connected()
+	print("Connected")
 	have_wifi = true
 	no_wifi_count = 0
 end
@@ -132,4 +132,5 @@ function wifi_err()
 	have_wifi = false
 end
 
+print("WiFi MAC: " .. wifi.sta.getmac())
 connect_wifi()
