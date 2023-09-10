@@ -18,8 +18,6 @@ There is also OpenSCAD source code for 3D-printing a case – however, as I reli
 * Power Supply: AliExpress TP4056 charge controller + BMS board; 2.5V cutoff
 * Battery: Regular 18650 LiIon cell; LiPo also works
 
-Mobile CO₂ monitor using an ESP8266, SCD4x, and SSD1306
-
 ## Images
 
 ![](https://finalrewind.org/projects/mobile-co2-monitor/media/preview.jpg)
