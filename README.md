@@ -1,8 +1,14 @@
 # Moile CO₂ Monitor
 
-This repository contains NodeMCU Lua source code for a mobile CO₂ monitor.
+This repository contains NodeMCU Lua source code for a [mobile CO₂ monitor](https://finalrewind.org/projects/mobile-co2-monitor/).
 I found it quite interesting to see how bad the air inside meeting rooms and train carriages can get, and how well ventilation in other areas can work.
 There is also OpenSCAD source code for 3D-printing a case – however, as I relied on hand-soldering rather than designing a PCB for this task, it will likely need adjustments.
+
+## Features
+
+* Display for CO₂, temperature, humidity, and battery level
+* Logging to InfluxDB
+* WiFi roaming (i.e., can connect to more than one WiFi network)
 
 ## Components
 
