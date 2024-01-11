@@ -16,12 +16,15 @@ gpio.mode(ledpin, gpio.OUTPUT)
 gpio.write(ledpin, 0)
 
 ssd1306.init(128, 64)
-ssd1306.contrast(255)
+ssd1306.contrast(128)
 fb.init(128, 64)
 
 wifi_index = 1
 no_wifi_count = 0
 publish_count = 0
+
+past_pos = 1
+past = {}
 
 -- cal 2023-01-06
 -- 4.2V -> "4.36V" (raw ~ 948)
@@ -68,22 +71,11 @@ function measure()
 	local co2, raw_temp, raw_humi = scd4x.read()
 	local bat_mv = get_battery_mv()
 	local bat_p = get_battery_percent(bat_mv)
-	local line1 = ""
-	local line2 = ""
-	if co2 == nil then
-		line1 = "SCD4x error"
-		fb.print(fn, line1)
-		ssd1306.show(fb.buf)
-		return
-	end
-	line1 = string.format("%8d ppm\n", co2)
-	line2 = string.format("%8d.%d c\n%8d.%d %%", raw_temp/65536 - 45, (raw_temp%65536)/6554, raw_humi/65536, (raw_humi%65536)/6554)
-	fb.y = 16
-	fb.print(fn, line1)
-	fb.print(fn, line2)
-	fb.draw_battery_8(114, 0, bat_p)
+
+	fb.draw_battery_8(0, 0, bat_p)
 	if have_wifi then
-		fb.x = 100
+		fb.x = 96
+		fb.y = 16
 		fb.print(fn, string.format("%d", wifi.sta.getrssi()))
 	else
 		if no_wifi_count == 5 then
@@ -97,6 +89,29 @@ function measure()
 			connect_wifi()
 		end
 	end
+
+	fb.x = 0
+	fb.y = 16
+	if co2 == nil then
+		fb.print(fn, "SCD4x error")
+		ssd1306.show(fb.buf)
+		return
+	end
+	fb.x = 16
+	fb.print(fn, string.format("%5d ppm", co2))
+	fb.x = 16
+	fb.y = 0
+	fb.print(fn, string.format("%4d.%d c %3d.%d %%", raw_temp/65536 - 45, (raw_temp%65536)/6554, raw_humi/65536, (raw_humi%65536)/6554))
+
+	past[past_pos] = (co2 - 400) / 64
+	past[past_pos] = past[past_pos] >=  0 and past[past_pos] or  0
+	past[past_pos] = past[past_pos] <= 31 and past[past_pos] or 31
+	past_pos = (past_pos) % 128 + 1
+
+	for i = 1, 128 do
+		fb.buf[i * 2] = bit.lshift(1, 31 - (past[(past_pos + (i-2)) % 128 + 1] or 0))
+	end
+
 	ssd1306.show(fb.buf)
 	fb.init(128, 64)
 	publish_count = publish_count + 1
