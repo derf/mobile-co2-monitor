@@ -67,11 +67,15 @@ function scd4x_start()
 end
 
 function measure()
-	fb.init(128, 64)
+	if publishing_http then
+		return
+	end
+
 	local co2, raw_temp, raw_humi = scd4x.read()
 	local bat_mv = get_battery_mv()
 	local bat_p = get_battery_percent(bat_mv)
 
+	fb.init(128, 64)
 	fb.draw_battery_8(0, 0, bat_p)
 	if have_wifi then
 		fb.x = 96
@@ -95,6 +99,8 @@ function measure()
 	if co2 == nil then
 		fb.print(fn, "SCD4x error")
 		ssd1306.show(fb.buf)
+		fb.init(128, 64)
+		collectgarbage()
 		return
 	end
 	fb.x = 16
@@ -126,8 +132,8 @@ function publish_influx(co2, raw_temp, raw_humi, bat_mv)
 	publishing_http = true
 	http.post(influx_url, influx_header, string.format("scd4x%s co2_ppm=%d,temperature_celsius=%d.%d,humidity_relpercent=%d.%d", influx_attr, co2, raw_temp/65536 - 45, (raw_temp%65536)/6554, raw_humi/65536, (raw_humi%65536)/6554), function(code, data)
 		http.post(influx_url, influx_header, string.format("esp8266%s battery_mv=%d", influx_attr, bat_mv), function(code, data)
-			publishing_http = false
 			collectgarbage()
+			publishing_http = false
 		end)
 	end)
 end
