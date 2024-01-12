@@ -103,7 +103,7 @@ function measure()
 	fb.y = 0
 	fb.print(fn, string.format("%4d.%d c %3d.%d %%", raw_temp/65536 - 45, (raw_temp%65536)/6554, raw_humi/65536, (raw_humi%65536)/6554))
 
-	past[past_pos] = (co2 - 400) / 64
+	past[past_pos] = (co2 - 400) / 50
 	past[past_pos] = past[past_pos] >=  0 and past[past_pos] or  0
 	past[past_pos] = past[past_pos] <= 31 and past[past_pos] or 31
 	past_pos = (past_pos) % 128 + 1
@@ -114,12 +114,11 @@ function measure()
 
 	ssd1306.show(fb.buf)
 	fb.init(128, 64)
+	collectgarbage()
 	publish_count = publish_count + 1
 	if have_wifi and influx_url and publish_count >= 4 and not publishing_http then
 		publish_count = 0
 		publish_influx(co2, raw_temp, raw_humi, bat_mv)
-	else
-		collectgarbage()
 	end
 end
 
