@@ -75,6 +75,8 @@ function measure()
 	local bat_mv = get_battery_mv()
 	local bat_p = get_battery_percent(bat_mv)
 
+	gpio.write(ledpin, co2 >= 1600 and 0 or 1)
+
 	fb.init(128, 64)
 	fb.draw_battery_8(0, 0, bat_p)
 	if have_wifi then
