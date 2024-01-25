@@ -60,3 +60,11 @@ part of the POST request to InfluxDB.
 
 ![](https://finalrewind.org/projects/mobile-co2-monitor/media/preview.jpg)
 ![](https://finalrewind.org/projects/mobile-co2-monitor/media/mobile-co2-monitor-board.jpg)
+
+## Resources
+
+Mirrors of this repository are maintained at the following locations:
+
+* [Chaosdorf](https://chaosdorf.de/git/derf/mobile-co2-monitor)
+* [git.finalrewind.org](https://git.finalrewind.org/mobile-co2-monitor/)
+* [GitHub](https://github.com/derf/mobile-co2-monitor)
