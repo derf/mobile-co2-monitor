@@ -52,7 +52,6 @@ function connect_wifi()
 	wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, wifi_err)
 	wifi.setmode(wifi.STATION, false)
 	wifi.sta.config(station_cfgs[wifi_index])
-	wifi.sta.connect()
 end
 
 function scd4x_start()
