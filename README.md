@@ -66,5 +66,5 @@ part of the POST request to InfluxDB.
 Mirrors of this repository are maintained at the following locations:
 
 * [Chaosdorf](https://chaosdorf.de/git/derf/mobile-co2-monitor)
-* [git.finalrewind.org](https://git.finalrewind.org/mobile-co2-monitor/)
+* [Finalrewind](https://git.finalrewind.org/derf/mobile-co2-monitor)
 * [GitHub](https://github.com/derf/mobile-co2-monitor)
